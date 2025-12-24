@@ -73,10 +73,10 @@ jobs:
           chmod +x build.sh
           ./build.sh config.toml
           
-      - name: Sign APKs
+      - name: Sign APKs with custom keystore
         run: |
-          find . -name "*.apk" -type f | while read apk; do
-            apksigner sign \
+          for apk in build/*.apk; do
+            java -jar bin/apksigner.jar sign \
               --ks keystore.p12 \
               --ks-type pkcs12 \
               --ks-pass pass:"${{ secrets.KEYSTORE_PASSWORD }}" \
@@ -95,5 +95,5 @@ jobs:
           tag_name: "apks-${{ github.run_id }}"
           name: "ReVanced APKs Build"
           files: |
-            *.apk
+            build/*.apk
           generate_release_notes: true
