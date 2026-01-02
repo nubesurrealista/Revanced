@@ -89,11 +89,30 @@ jobs:
       - name: Get version info
         id: versions
         run: |
-          YT_VER=$(ls build/*youtube*.apk 2>/dev/null | head -1 | grep -o 'v[0-9.]*' | sed 's/v//' || echo "unknown")
-          YTM_VER=$(ls build/*music*.apk 2>/dev/null | head -1 | grep -o 'v[0-9.]*' | sed 's/v//' || echo "unknown")
+          YT_FILE=$(ls build/*youtube*.apk 2>/dev/null | head -1)
+          YTM_FILE=$(ls build/*music*.apk 2>/dev/null | head -1)
+          
+          YT_VER="unknown"
+          YTM_VER="unknown"
+          
+          if [ -n "$YT_FILE" ]; then
+            YT_VER=$(basename "$YT_FILE" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          fi
+          
+          if [ -n "$YTM_FILE" ]; then
+            YTM_VER=$(basename "$YTM_FILE" | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+' | head -1)
+          fi
           
           echo "YOUTUBE_VERSION=$YT_VER" >> $GITHUB_OUTPUT
           echo "MUSIC_VERSION=$YTM_VER" >> $GITHUB_OUTPUT
+          
+      - name: Commit version update
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .last_patches_version
+          git commit -m "Update to patches ${{ needs.check.outputs.NEW_VERSION }}" || echo "No changes to commit"
+          git push || echo "Nothing to push"
           
       - name: Create Release
         uses: softprops/action-gh-release@v1
